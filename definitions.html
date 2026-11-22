@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Определения">
+<meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e1013" media="(prefers-color-scheme: dark)">
+<title>Определения — зачёт</title>
+<style>
+  :root{
+    --bg:#f5f5f7; --card:#ffffff; --text:#111318; --muted:#767a83; --line:#e3e4e8;
+    --accent:#2f6df6; --ok:#12996a; --ok-bg:#e6f6ef; --err:#d63c31; --err-bg:#fdecea;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0e1013; --card:#171a1f; --text:#f2f3f5; --muted:#8b909a; --line:#272b32;
+      --accent:#5b8dff; --ok:#3ecf8e; --ok-bg:#12301f; --err:#ff6b5e; --err-bg:#331b1a;
+    }
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0;}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    -webkit-font-smoothing:antialiased; font-size:16px;
+  }
+  #app{
+    max-width:600px; margin:0 auto; min-height:100vh; min-height:100dvh;
+    display:flex; flex-direction:column;
+    padding: max(14px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+  }
+  .screen{display:none; flex:1; flex-direction:column; gap:14px;}
+  .screen.active{display:flex;}
+  .spacer{flex:1;}
+
+  /* ---------- Home ---------- */
+  .home-head{padding:14px 2px 0;}
+  .home-head h1{font-size:32px; margin:0 0 6px; letter-spacing:-.02em; font-weight:700;}
+  .muted{color:var(--muted); font-size:14px; margin:0;}
+  .settings{display:flex; flex-direction:column; gap:16px; margin-top:6px;}
+  .field-label{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-bottom:8px;}
+  .seg{display:flex; background:var(--card); border:1px solid var(--line); border-radius:13px; padding:3px; gap:3px;}
+  .seg button{
+    flex:1; padding:11px 4px; border:0; background:transparent; color:var(--muted);
+    font-size:14px; font-weight:600; border-radius:10px; font-family:inherit; cursor:pointer;
+    transition:background .15s, color .15s; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .seg button.on{background:var(--accent); color:#fff;}
+
+  /* ---------- Buttons ---------- */
+  .primary{
+    width:100%; padding:16px; border-radius:15px; border:0;
+    background:var(--accent); color:#fff; font-size:16px; font-weight:600;
+    font-family:inherit; cursor:pointer; transition:opacity 0.15s;
+  }
+  .primary:active{opacity:.85;}
+  .primary.big{padding:18px; font-size:17px;}
+  .secondary{
+    width:100%; padding:15px; border-radius:15px; border:1px solid var(--line);
+    background:var(--card); color:var(--text); font-size:16px; font-weight:600;
+    font-family:inherit; cursor:pointer;
+  }
+  .secondary:active{opacity:.75;}
+  .ghost{
+    width:100%; padding:14px; border:0; background:transparent; color:var(--muted);
+    font-size:15px; font-weight:500; font-family:inherit; cursor:pointer;
+  }
+  .ghost:active{opacity:.6;}
+  .hidden{display:none !important;}
+
+  /* ---------- Quiz ---------- */
+  .topbar{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+  .icon-btn{
+    width:38px; height:38px; border-radius:50%; border:1px solid var(--line);
+    background:var(--card); color:var(--muted); font-size:16px; line-height:1;
+    display:grid; place-items:center; cursor:pointer; font-family:inherit; padding:0;
+  }
+  .counter{font-size:15px; font-weight:600; color:var(--muted); font-variant-numeric:tabular-nums;}
+  .counter b{color:var(--text);}
+  .score{font-size:15px; font-weight:700; color:var(--ok); font-variant-numeric:tabular-nums;}
+  .progress{height:4px; background:var(--line); border-radius:2px; overflow:hidden;}
+  .progress > div{height:100%; width:0; background:var(--accent); border-radius:2px; transition:width .25s ease;}
+
+  /* Flashcard specific */
+  .flashcard{
+    background:var(--card); border:1px solid var(--line); border-radius:20px;
+    padding:24px 20px; display:flex; flex-direction:column; gap:16px;
+    align-items:center; justify-content:center; text-align:center;
+    min-height:220px; transition:all 0.2s ease;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+  }
+  .flashcard.flipped { align-items: flex-start; text-align: left; justify-content: flex-start; }
+  .f-term{font-size:clamp(20px, 6vw, 28px); line-height:1.3; font-weight:700; letter-spacing:-.01em; overflow-wrap:break-word; word-break:break-word;}
+  .f-def{font-size:clamp(16px, 4.2vw, 19px); line-height:1.5; color:var(--text); display:none;}
+  .flashcard.flipped .f-def{display:block;}
+  
+  .self-assess{display:flex; gap:10px; width:100%; margin-top:auto;}
+  .btn-err{background:var(--err-bg); color:var(--err); border:1px solid var(--err);}
+  .btn-ok{background:var(--ok-bg); color:var(--ok); border:1px solid var(--ok);}
+  .self-assess button{padding:16px; border-radius:15px; font-size:16px; font-weight:700; cursor:pointer; flex:1; font-family:inherit; transition:transform 0.1s;}
+  .self-assess button:active{transform:scale(0.97);}
+
+  /* Choice specific */
+  .option{
+    width:100%; text-align:left; padding:16px; border-radius:15px;
+    border:1px solid var(--line); background:var(--card); color:var(--text);
+    font-size:15px; line-height:1.45; font-weight:500; font-family:inherit;
+    cursor:pointer; transition:background .15s, border-color .15s;
+    overflow-wrap:break-word;
+  }
+  .option:active{opacity:.75;}
+  .option.ok{background:var(--ok-bg); border-color:var(--ok); color:var(--ok); font-weight:600;}
+  .option.err{background:var(--err-bg); border-color:var(--err); color:var(--err);}
+  .option:disabled{opacity:1; cursor:default;}
+  
+  .banner{padding:13px 15px; border-radius:13px; font-size:15px; font-weight:600; line-height:1.4; overflow-wrap:break-word;}
+  .banner.ok{background:var(--ok-bg); color:var(--ok);}
+  .banner.err{background:var(--err-bg); color:var(--err);}
+
+  .footer{margin-top:auto; padding-top:6px;}
+
+  /* ---------- Result ---------- */
+  .result{display:flex; flex-direction:column; align-items:center; gap:4px; padding:26px 0 10px;}
+  .result-score{font-size:54px; font-weight:700; letter-spacing:-.03em; font-variant-numeric:tabular-nums;}
+  .result-sub{font-size:15px; color:var(--muted); font-weight:600;}
+  .result-actions{display:flex; flex-direction:column; gap:10px;}
+  .section-label{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-top:8px;}
+
+  /* ---------- List ---------- */
+  .list{display:flex; flex-direction:column;}
+  .row{padding:12px 2px; border-bottom:1px solid var(--line);}
+  .row:last-child{border-bottom:0;}
+  .row-term{font-size:16px; font-weight:700; line-height:1.3; margin-bottom:4px;}
+  .row-def{font-size:14px; color:var(--muted); line-height:1.4;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ============ HOME ============ -->
+  <section class="screen active" id="screen-home">
+    <div class="home-head">
+      <h1>Определения</h1>
+      <p class="muted">Заучивание терминов · 122 шт.</p>
+    </div>
+
+    <div class="settings">
+      <div class="field">
+        <div class="field-label">Режим</div>
+        <div class="seg" data-key="mode">
+          <button type="button" data-val="flash" class="on">Карточки</button>
+          <button type="button" data-val="choice">Выбор варианта</button>
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-label">Часть</div>
+        <div class="seg" data-key="range">
+          <button type="button" data-val="all" class="on">Все</button>
+          <button type="button" data-val="a">1–40</button>
+          <button type="button" data-val="b">41–80</button>
+          <button type="button" data-val="c">81–122</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="spacer"></div>
+    <button class="primary big" id="btnStart">Начать</button>
+    <button class="ghost" id="btnList">Список всех терминов</button>
+  </section>
+
+  <!-- ============ QUIZ ============ -->
+  <section class="screen" id="screen-quiz">
+    <div class="topbar">
+      <button class="icon-btn" id="btnQuit" aria-label="Выйти">✕</button>
+      <div class="counter"><b id="qNum">1</b> / <span id="qTotal">1</span></div>
+      <div class="score"><span id="qScore">0</span> ✓</div>
+    </div>
+    <div class="progress"><div id="progFill"></div></div>
+
+    <!-- Flashcard Container -->
+    <div class="flashcard" id="flashContainer">
+      <div class="f-term" id="fTerm">Term</div>
+      <div class="f-def" id="fDef">Definition</div>
+    </div>
+
+    <!-- Answer Area for Choice Mode -->
+    <div id="answerArea" class="answer-area"></div>
+
+    <!-- Footer Actions -->
+    <div class="footer">
+      <!-- For Flashcard Mode -->
+      <button class="primary big" id="btnShowDef">Показать определение</button>
+      <div class="self-assess hidden" id="selfAssess">
+        <button type="button" class="btn-err" id="btnKnewNot">Не помню</button>
+        <button type="button" class="btn-ok" id="btnKnew">Помню</button>
+      </div>
+      
+      <!-- For Choice Mode -->
+      <button class="primary hidden" id="btnNext">Далее</button>
+    </div>
+  </section>
+
+  <!-- ============ RESULT ============ -->
+  <section class="screen" id="screen-result">
+    <div class="topbar">
+      <div class="counter"><b>Результат</b></div>
+      <div></div>
+    </div>
+    <div class="result">
+      <div class="result-score" id="resScore">0 / 0</div>
+      <div class="result-sub" id="resPct">0%</div>
+    </div>
+    <div class="result-actions">
+      <button class="primary" id="btnRetryWrong">Повторить ошибки</button>
+      <button class="secondary" id="btnAgain">Пройти заново</button>
+      <button class="ghost" id="btnHome">На главную</button>
+    </div>
+    <div class="section-label hidden" id="wrongLabel">Ошибки</div>
+    <div id="wrongList" class="list"></div>
+  </section>
+
+  <!-- ============ LIST ============ -->
+  <section class="screen" id="screen-list">
+    <div class="topbar">
+      <button class="icon-btn" id="btnBackList" aria-label="Назад">←</button>
+      <div class="counter"><b>Все термины</b></div>
+      <div style="width:38px"></div>
+    </div>
+    <input class="secondary" id="searchInput" type="search" placeholder="Поиск по термину или определению…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width:100%; padding:15px; font-size:15px; border-radius:15px; margin-bottom:10px;">
+    <div id="allList" class="list"></div>
+  </section>
+
+</div>
+
+<script>
+/* ================= ДАННЫЕ: term / definition ================= */
+const DATA = [
+  { term: "Desktop PC", def: "A personal computer designed for use in a single, stationary location, typically consisting of a system unit, monitor, keyboard, and mouse." },
+  { term: "Laptop PC", def: "A portable, lightweight computer with a hinged design, featuring a flat LCD screen, a built-in keyboard with a touchpad, and a battery for mobile use." },
+  { term: "Mainframe", def: "A large, powerful computer capable of supporting multiple users and thousands of simultaneous queries; it is often used for large-scale data processing in banks and big corporations." },
+  { term: "Server", def: "A central computer connected to a network of 'client' workstations, designed to store data and provide services with higher processing power and memory than a standard workstation." },
+  { term: "Supercomputer", def: "The fastest type of computer, containing tens of thousands of processors for simultaneous execution of data-intensive tasks such as weather forecasting and aerodynamics." },
+  { term: "Tablet PC", def: "A highly portable mobile device with a touch screen interface, typically lacking a physical keyboard and using a mobile operating system." },
+  { term: "Touchpad", def: "A sensitive pad built into a laptop keyboard that allows the user to move the pointer on the screen by touch, serving as a replacement for a mouse." },
+  
+  { term: "ALU (Arithmetic Logic Unit)", def: "The specific part of the CPU that performs actual arithmetic (e.g., addition, subtraction) and logical operations (e.g., AND, OR, NOT)." },
+  { term: "BIOS (Basic Input/Output System)", def: "A ROM chip on the motherboard containing firmware used to perform hardware initialization during the booting process." },
+  { term: "Bus", def: "An electrical channel that carries signals and allows devices inside the computer to communicate with each other." },
+  { term: "CPU (Central Processing Unit)", def: "The 'brain' of the computer, built into a single chip (microprocessor), responsible for executing program instructions and coordinating all other units." },
+  { term: "Clock speed", def: "The measurement of how many cycles a CPU executes per second, typically measured in gigahertz (GHz)." },
+  { term: "Control Unit", def: "The component of the CPU that interprets instructions from the user's program and directs the rest of the hardware to execute them." },
+  { term: "Expansion slot", def: "A socket on the motherboard that allows users to install expansion cards to add features like sound or network capabilities." },
+  { term: "Hardware", def: "Any physical, electronic, or mechanical part of a computer system that can be seen or touched." },
+  { term: "Input device", def: "A hardware unit that enables the user to enter data into the computer's memory, such as a keyboard, mouse, or scanner." },
+  { term: "IR (Instruction Register)", def: "A CPU register that holds the instruction that is being executed now." },
+  { term: "Motherboard", def: "The main circuit board of a computer that holds the CPU, memory chips, expansion slots, and controllers for peripherals." },
+  { term: "Mouse", def: "A small input device used to specify the position of the cursor or to make choices from menus." },
+  { term: "Output device", def: "Any peripheral that allows the user to extract or view the finished results from the system, such as a monitor or printer." },
+  { term: "Peripherals", def: "Physical units attached to the computer, including input, output, and storage devices." },
+  { term: "PC (Program Counter)", def: "A CPU register that keeps track of the next instruction to be performed." },
+  { term: "RAM (Random Access Memory)", def: "Volatile main memory used to temporarily store data and instructions while they are being processed by the CPU; its contents are lost when power is turned off." },
+  { term: "Registers", def: "High-speed memory units within the CPU used to store and control data immediately needed for instruction execution." },
+  { term: "ROM (Read Only Memory)", def: "Non-volatile memory containing permanent instructions and routines for basic CPU operations, such as the BIOS." },
+  { term: "Scanner", def: "An input device that converts images, printed text or handwriting into a digital image." },
+  { term: "Speaker", def: "A device that provides sound output." },
+  { term: "Storage device", def: "A peripheral device used for permanent or long-term storage of data and programs, such as hard drives or flash drives." },
+  
+  { term: "CLI (Command line interface)", def: "The way to interact with a computer system through typing various commands in the form of lines of text." },
+  { term: "Compatible", def: "Being able to work with another device or program." },
+  { term: "Cooperative multitasking", def: "A computer multitasking technique in which the operating system never initiates a context switch from a running process to another process." },
+  { term: "Device driver", def: "A type of software that controls specific hardware of the computer system." },
+  { term: "Firmware", def: "Permanent software or set of instructions stored in ROM of the computer system." },
+  { term: "GUI (Graphical User Interface)", def: "A user-friendly interface based on graphics; it uses a WIMP environment." },
+  { term: "Open-source software", def: "A type of computer software whose copyright holder grants users the rights to use, study, change, and distribute the software to anyone and for any purpose." },
+  { term: "Operating system", def: "A set of programs that manage the computer's hardware resources, establish a user interface, and provide the environment for application programs to run." },
+  { term: "Preemptive multitasking", def: "A computer multitasking technique where the OS controls CPU time and interrupts active tasks to switch to higher-priority ones." },
+  { term: "Proprietary software", def: "Non-free software whose users are not allowed to share, modify it, and distribute the modifications." },
+  { term: "Spreadsheet", def: "A computer application for organization, analysis and storage of data in a tabular form." },
+  { term: "Word processor", def: "A computer application used to compose and edit texts." },
+
+  { term: "Ad hoc topology", def: "A wireless peer-to-peer network that does not rely on the existing infrastructure." },
+  { term: "Bluetooth", def: "A wireless technology that allows mobile devices and other peripheral devices to communicate over short distances." },
+  { term: "Bus topology", def: "A network setup where all nodes (computers, servers, printers) connect directly to a single, central cable, known as the backbone or bus." },
+  { term: "Client-server network", def: "A computing model in which multiple clients connect to a central server to access resources, such as files, applications, and data." },
+  { term: "Computer network", def: "A group of connected computers that communicate using common protocols to share data and resources." },
+  { term: "Hybrid topology", def: "A network structure that combines two or more different types of topologies into a single system." },
+  { term: "IP address (Internet Protocol)", def: "The unique identifying number assigned to every device connected to the internet." },
+  { term: "Latency", def: "The time delay between a user's action (request) and the system's response, typically measured in milliseconds (ms)." },
+  { term: "LAN (Local area network)", def: "A collection of devices connected together in one physical location, such as a building, office, or home." },
+  { term: "Mesh topology", def: "A network configuration where every device is interconnected with every other device, providing multiple routes for data to travel." },
+  { term: "MAN (Metropolitan Area Network)", def: "A high-speed network that interconnects multiple LANs within a specific geographic area, such as a city, large campus, or municipality." },
+  { term: "Network bridge", def: "A hardware component connecting networks that use the same protocol." },
+  { term: "Network gateway", def: "A device or software used to enable communication between two networks that may be using different protocols." },
+  { term: "Network hub", def: "A node that broadcasts data to every computer connected to it without restriction." },
+  { term: "Network switch", def: "Identical to a network hub, but unlike a hub, a switch forwards data to the specific device only based on its MAC address." },
+  { term: "Network topology", def: "The configuration of the elements (nodes) of a network." },
+  { term: "Peer-to-peer network", def: "A network architecture in which all the computers have the same capabilities, i.e. share files and peripherals, without requiring a separate server computer." },
+  { term: "Ring topology", def: "A LAN topology, in which all devices are interconnected in a continuous loop." },
+  { term: "Router", def: "A networking device that can send data packets from one network to another." },
+  { term: "Star topology", def: "A LAN topology, in which all data flows through a central hub, a common connection point for the devices on the network." },
+  { term: "WAN (Wide Area Network)", def: "A type of computer network that connects computers and other devices over a large geographical area (a country or a continent)." },
+  { term: "Wired networks", def: "Communication systems that connect devices (computers, printers, servers) using physical cables, such as Ethernet (twisted pair), fiber optics, or coaxial cables, to a central router or switch." },
+  { term: "WLAN (Wireless LAN)", def: "A wireless computer network that forms a local area network by linking devices over Wi-Fi radio signals." },
+
+  { term: "Bandwidth", def: "The measure of how much information can pass through a data connection in a given amount of time, measured in bits per second." },
+  { term: "Cellular network", def: "A radio-based communication network distributed over land areas called cells, each served by a fixed-location transceiver, known as a cell tower." },
+  { term: "Dial-up connection", def: "An old way to access the internet using a regular phone line and a modem, where voice and data share the same frequency. This technology pre-existed the DSL connection." },
+  { term: "DSL (Digital Subscriber Line)", def: "A broadband internet technology that uses different frequencies on a standard telephone line, allowing simultaneous internet access and voice calls." },
+  { term: "Fiber-optic technology", def: "The fastest wired way to access the Internet transmitting information as pulses of light through strands of fiber made of glass or plastic over long distances." },
+  { term: "TCP/IP stack", def: "A four-layer protocol model used on the Internet to govern how data is transmitted between computers. It is named after the two main protocols TCP and IP." },
+  { term: "WWW (World Wide Web)", def: "An information system accessible through the Internet where documents and other web resources are identified by a Uniform Resource Locator (URL)." },
+
+  { term: "Ranking", def: "The process of ordering the search results from most relevant to least relevant." },
+  { term: "Web crawler", def: "A special program also known as a spider that regularly browses the web to discover new content. It stores copies of the pages in a search engine's index." },
+  { term: "Human-powered directories", def: "Systems that depend on human editors for their listings." },
+  { term: "Meta-search engine", def: "A type of search engine which does not have a database of indexed pages of its own. Instead, it sends users' queries to several other search engines and compiles top results from each into one overall list." },
+  { term: "Search bar", def: "A field on the screen that allows users to enter keywords or phrases to find specific content." },
+  { term: "Web browser", def: "Software that serves as a gateway to the World Wide Web. It identifies individual URLs and displays the corresponding page on the user's device." },
+  { term: "Search engine", def: "A software system that scans, indexes, and retrieves web content to help users find information online." },
+  { term: "Hyperlink", def: "A highlighted word or image in a hypertext document that takes a user to another location when he/she clicks on it." },
+
+  { term: "Assembly language", def: "A low-level programming language that uses symbolic instructions rather than raw binary coding to communicate directly with a computer's hardware." },
+  { term: "OOP (Object-oriented programming)", def: "A programming paradigm in computer science that relies on the concept of classes and objects. Objects are defined as software entities that encapsulate data and functions." },
+  { term: "Compiler", def: "A special program that converts a source program (written in a high-level language) into object code in one go." },
+  { term: "Interpreter", def: "A special program that translates the source code line by line, as the program is running." },
+  { term: "Inheritance", def: "The ability of one class of objects to use properties and behavior of another class." },
+  { term: "Polymorphism", def: "A programming language's ability to process objects differently depending on their data type or class." },
+  { term: "Encapsulation", def: "A fundamental concept that combines data (attributes) and methods (functions) into a single unit." },
+  { term: "Source code", def: "A set of instructions typically written in a high-level programming language that defines how a program or application should function." },
+  { term: "Machine code", def: "A code made of just two numbers (0 and 1)." },
+  { term: "Debugging", def: "The technique of detecting and correcting errors which may occur in programs." },
+
+  { term: "Adware", def: "A form of financially supported malware that usually presents itself as unwanted commercials." },
+  { term: "Backdoor", def: "A technique that involves leaving, within a completed program, an illicit program that allows unauthorized and unknown entry." },
+  { term: "DDoS attack", def: "An attack where hackers overload networks and servers with traffic so that computer systems are unable to keep up with legitimate needs." },
+  { term: "Hijacking", def: "A type of cybercrime which involves redirecting anyone trying to visit a certain site elsewhere." },
+  { term: "Keylogger", def: "A type of spyware used to monitor and record each keystroke on a specific keyboard. The information is gathered and sent to the attacker, most often used for stealing passwords." },
+  { term: "Miner", def: "A virus which uses your computer power to earn cryptocurrency for others." },
+  { term: "Misdirection routine", def: "The component that allows a virus to hide itself." },
+  { term: "Payload", def: "The component of a virus that does the damage to the computer system." },
+  { term: "Phishing", def: "A type of cybercrime where the attacker sends a fake message designed to trick a person into revealing sensitive information to the attacker." },
+  { term: "Piracy", def: "Unauthorized copying of a program for sale or distributing to other users." },
+  { term: "Ransomware", def: "A type of malware that threatens to publish the victim's data, encrypts the victim's data or blocks access to the device unless a payment is made." },
+  { term: "Reproduction routine", def: "The component that allows the virus to self-replicate and infect other programs." },
+  { term: "Salami shaving", def: "A computer crime in which a program is altered so that it transfers a small amount of money from a large number of accounts to make a large profit." },
+  { term: "Spyware", def: "Malicious software designed to enter a computer device, gather data about a person or organization and forward it to a third party without a user's consent." },
+  { term: "Trigger", def: "The component of a virus that activates payload." },
+  { term: "Trojan", def: "A type of malware that misleads users of its true intent by pretending to be a useful program." },
+  { term: "Website defacement", def: "A cybercrime which involves changing the information shown on another person's website." },
+  { term: "Worm", def: "A standalone malicious computer program that replicates itself to infect other computers. It is able to spread across the network directly without attaching itself to a host file." },
+
+  { term: "Antivirus software", def: "Designed to detect, prevent and take action to disarm or remove malicious software from your computer such as viruses, worms and Trojan horses." },
+  { term: "Asymmetric encryption", def: "A security method that uses a mathematically linked pair of keys — a public key for encryption and a private key for decryption — to protect data." },
+  { term: "Brute force", def: "A cybersecurity threat where a hacker attempts to access a system by systematically testing different passwords." },
+  { term: "Ciphertext", def: "Encrypted text transformed from plaintext using an encryption algorithm." },
+  { term: "Cryptanalysis", def: "A method of spotting a weakness in the cipher aiming to decrypt encoded data." },
+  { term: "Cryptographic key", def: "A randomized string of bits used to encrypt and/or decrypt data." },
+  { term: "Cryptography", def: "The process of hiding or coding information so that only the person a message was intended for can read it." },
+  { term: "Cybersecurity", def: "The practice employed to protect and secure computers, servers, networks, mobile devices, electronic systems, and data from being attacked." },
+  { term: "Differential backup", def: "A data protection method that copies all files changed since the last full backup." },
+  { term: "Encryption", def: "A way of encoding data so that only authorized parties can understand the information." },
+  { term: "Firewall", def: "A combination of software and hardware used to protect private networks by filtering incoming data traffic." },
+  { term: "Heuristic scanning", def: "A type of malware detection technique which allows identifying potentially malicious software without having an exact match in signature database." },
+  { term: "MFA (Multi-factor authentication)", def: "A user verification technology that requires more than one type of user validation." },
+  { term: "Password", def: "Secret data, typically a string of characters, usually used to confirm a user's identity." },
+  { term: "Signature (virus)", def: "A distinguishing feature that every computer virus contains." },
+  { term: "Symmetric encryption", def: "The process of using a single key to both encrypt and decrypt data." }
+];
+
+/* ================= СОСТОЯНИЕ ================= */
+const state = {
+  mode: 'flash',
+  range: 'all',
+  queue: [],
+  pos: 0,
+  score: 0,
+  wrong: [],
+  answered: false,
+  flipped: false,
+  token: 0
+};
+
+const $ = function(s){ return document.querySelector(s); };
+
+function show(id){
+  document.querySelectorAll('.screen').forEach(function(s){
+    s.classList.toggle('active', s.id === id);
+  });
+  window.scrollTo(0, 0);
+}
+
+function shuffle(a){
+  for(let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    const t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+/* ================= НАСТРОЙКИ ================= */
+document.querySelectorAll('.seg').forEach(function(seg){
+  seg.addEventListener('click', function(e){
+    const b = e.target.closest('button');
+    if(!b) return;
+    seg.querySelectorAll('button').forEach(function(x){
+      x.classList.toggle('on', x === b);
+    });
+    state[seg.dataset.key] = b.dataset.val;
+  });
+});
+
+/* ================= СБОРКА ВОПРОСОВ ================= */
+const RANGES = { all:[0, DATA.length], a:[0,40], b:[40,80], c:[80, DATA.length] };
+
+function buildPool(){
+  const r = RANGES[state.range] || RANGES.all;
+  const idx = [];
+  for(let i = r[0]; i < r[1]; i++) idx.push(i);
+  return shuffle(idx);
+}
+
+function startQuiz(indices){
+  const pool = indices ? indices.slice() : buildPool();
+  state.queue = shuffle(pool);
+  state.pos = 0;
+  state.score = 0;
+  state.wrong = [];
+  state.answered = false;
+  state.flipped = false;
+  state.token++;
+  show('screen-quiz');
+  nextQuestion();
+}
+
+function makeOptions(correctIdx){
+  const set = new Set([correctIdx]);
+  let guard = 0;
+  while(set.size < 4 && guard++ < 800){
+    const j = Math.floor(Math.random() * DATA.length);
+    if(j !== correctIdx) set.add(j);
+  }
+  return shuffle(Array.from(set));
+}
+
+/* ================= РЕНДЕР ВОПРОСА ================= */
+function nextQuestion(){
+  if(state.pos >= state.queue.length){ finish(); return; }
+
+  const token = ++state.token;
+  state.answered = false;
+  state.flipped = false;
+
+  const idx = state.queue[state.pos];
+  const t = DATA[idx];
+
+  $('#qNum').textContent = state.pos + 1;
+  $('#qTotal').textContent = state.queue.length;
+  $('#qScore').textContent = state.score;
+  $('#progFill').style.width = (state.pos / state.queue.length * 100) + '%';
+  
+  const flashContainer = $('#flashContainer');
+  flashContainer.classList.remove('flipped');
+  
+  const btnShowDef = $('#btnShowDef');
+  const selfAssess = $('#selfAssess');
+  const btnNext = $('#btnNext');
+  const answerArea = $('#answerArea');
+
+  // Reset visibility
+  btnShowDef.classList.add('hidden');
+  selfAssess.classList.add('hidden');
+  btnNext.classList.add('hidden');
+  answerArea.innerHTML = '';
+
+  if(state.mode === 'flash'){
+    flashContainer.style.display = 'flex';
+    $('#fTerm').textContent = t.term;
+    $('#fDef').textContent = t.def;
+    btnShowDef.classList.remove('hidden');
+    
+    // Attach event handlers for flashcard
+    btnShowDef.onclick = function() {
+      flashContainer.classList.add('flipped');
+      btnShowDef.classList.add('hidden');
+      selfAssess.classList.remove('hidden');
+    };
+  } else {
+    // Choice mode
+    flashContainer.style.display = 'flex'; // Keep it to show the term
+    $('#fTerm').textContent = t.term;
+    $('#fDef').textContent = ''; // Hide definition
+    flashContainer.classList.add('flipped'); // Ensure normal styles
+    
+    // Render options
+    const options = makeOptions(idx);
+    options.forEach(optIdx => {
+      const optDef = DATA[optIdx].def;
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'option';
+      b.textContent = optDef;
+      b.addEventListener('click', function(){ pickOption(b, optIdx === idx, t, token); });
+      answerArea.appendChild(b);
+    });
+  }
+}
+
+/* ================= ОТВЕТЫ ================= */
+function registerAnswer(ok){
+  if(ok){ state.score++; }
+  else { state.wrong.push(state.queue[state.pos]); }
+  $('#qScore').textContent = state.score;
+}
+
+// Flashcard self-assessment
+$('#btnKnew').addEventListener('click', function(){
+  if(state.answered) return;
+  state.answered = true;
+  registerAnswer(true);
+  advance();
+});
+
+$('#btnKnewNot').addEventListener('click', function(){
+  if(state.answered) return;
+  state.answered = true;
+  registerAnswer(false);
+  advance();
+});
+
+// Choice selection
+function pickOption(btn, isCorrect, termObj, token){
+  if(state.answered || token !== state.token) return;
+  state.answered = true;
+
+  Array.prototype.forEach.call($('#answerArea').children, function(b){
+    b.disabled = true;
+    if(b.textContent === termObj.def) b.classList.add('ok');
+    else if(b === btn) b.classList.add('err');
+  });
+
+  registerAnswer(isCorrect);
+
+  if(isCorrect){
+    setTimeout(function(){ if(token === state.token) advance(); }, 700);
+  } else {
+    $('#btnNext').classList.remove('hidden');
+  }
+}
+
+function advance(){
+  state.pos++;
+  if(state.pos >= state.queue.length){ finish(); return; }
+  nextQuestion();
+}
+
+/* ================= ЗАВЕРШЕНИЕ ================= */
+function finish(){
+  const total = state.queue.length;
+  const correct = state.score;
+  const pct = total ? Math.round(correct / total * 100) : 0;
+
+  $('#resScore').textContent = correct + ' / ' + total;
+  $('#resPct').textContent = pct + '%';
+
+  const wl = $('#wrongList');
+  wl.innerHTML = '';
+
+  const retryBtn = $('#btnRetryWrong');
+  const wrongLabel = $('#wrongLabel');
+
+  if(state.wrong.length){
+    retryBtn.classList.remove('hidden');
+    retryBtn.textContent = 'Повторить ошибки (' + state.wrong.length + ')';
+    wrongLabel.classList.remove('hidden');
+
+    const frag = document.createDocumentFragment();
+    state.wrong.forEach(function(i){
+      const t = DATA[i];
+      const row = document.createElement('div');
+      row.className = 'row';
+      const a = document.createElement('div');
+      a.className = 'row-term';
+      a.textContent = t.term;
+      const b = document.createElement('div');
+      b.className = 'row-def';
+      b.textContent = t.def;
+      row.appendChild(a);
+      row.appendChild(b);
+      frag.appendChild(row);
+    });
+    wl.appendChild(frag);
+  } else {
+    retryBtn.classList.add('hidden');
+    wrongLabel.classList.add('hidden');
+  }
+
+  show('screen-result');
+}
+
+/* ================= КНОПКИ УПРАВЛЕНИЯ ================= */
+$('#btnStart').addEventListener('click', function(){ startQuiz(null); });
+
+$('#btnNext').addEventListener('click', function(){
+  if(state.answered) advance();
+});
+
+$('#btnQuit').addEventListener('click', function(){
+  if(confirm('Прервать тренировку?')){
+    state.token++;
+    show('screen-home');
+  }
+});
+
+$('#btnAgain').addEventListener('click', function(){ startQuiz(null); });
+
+$('#btnRetryWrong').addEventListener('click', function(){
+  if(state.wrong.length) startQuiz(state.wrong);
+});
+
+$('#btnHome').addEventListener('click', function(){ show('screen-home'); });
+
+$('#btnList').addEventListener('click', function(){
+  $('#searchInput').value = '';
+  renderList('');
+  show('screen-list');
+});
+
+$('#btnBackList').addEventListener('click', function(){ show('screen-home'); });
+
+/* ================= СПИСОК ================= */
+function renderList(filter){
+  const q = (filter || '').trim().toLowerCase();
+  const list = $('#allList');
+  const frag = document.createDocumentFragment();
+
+  DATA.forEach(function(t){
+    if(q && t.term.toLowerCase().indexOf(q) === -1 && t.def.toLowerCase().indexOf(q) === -1) return;
+    const row = document.createElement('div');
+    row.className = 'row';
+    const a = document.createElement('div');
+    a.className = 'row-term';
+    a.textContent = t.term;
+    const b = document.createElement('div');
+    b.className = 'row-def';
+    b.textContent = t.def;
+    row.appendChild(a);
+    row.appendChild(b);
+    frag.appendChild(row);
+  });
+
+  list.innerHTML = '';
+  list.appendChild(frag);
+}
+
+$('#searchInput').addEventListener('input', function(e){
+  renderList(e.target.value);
+});
+</script>
+</body>
+</html>
