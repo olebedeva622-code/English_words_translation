@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Термины">
+<meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e1013" media="(prefers-color-scheme: dark)">
+<title>Термины — зачёт</title>
+<style>
+  :root{
+    --bg:#f5f5f7; --card:#ffffff; --text:#111318; --muted:#767a83; --line:#e3e4e8;
+    --accent:#2f6df6; --ok:#12996a; --ok-bg:#e6f6ef; --err:#d63c31; --err-bg:#fdecea;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0e1013; --card:#171a1f; --text:#f2f3f5; --muted:#8b909a; --line:#272b32;
+      --accent:#5b8dff; --ok:#3ecf8e; --ok-bg:#12301f; --err:#ff6b5e; --err-bg:#331b1a;
+    }
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0;}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    -webkit-font-smoothing:antialiased; font-size:16px;
+  }
+  #app{
+    max-width:560px; margin:0 auto; min-height:100vh; min-height:100dvh;
+    display:flex; flex-direction:column;
+    padding: max(14px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+  }
+  .screen{display:none; flex:1; flex-direction:column; gap:14px;}
+  .screen.active{display:flex;}
+  .spacer{flex:1;}
+
+  /* ---------- Home ---------- */
+  .home-head{padding:14px 2px 0;}
+  .home-head h1{font-size:32px; margin:0 0 6px; letter-spacing:-.02em; font-weight:700;}
+  .muted{color:var(--muted); font-size:14px; margin:0;}
+  .settings{display:flex; flex-direction:column; gap:16px; margin-top:6px;}
+  .field-label{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-bottom:8px;}
+  .seg{display:flex; background:var(--card); border:1px solid var(--line); border-radius:13px; padding:3px; gap:3px;}
+  .seg button{
+    flex:1; padding:11px 4px; border:0; background:transparent; color:var(--muted);
+    font-size:14px; font-weight:600; border-radius:10px; font-family:inherit; cursor:pointer;
+    transition:background .15s, color .15s; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .seg button.on{background:var(--accent); color:#fff;}
+
+  /* ---------- Buttons ---------- */
+  .primary{
+    width:100%; padding:16px; border-radius:15px; border:0;
+    background:var(--accent); color:#fff; font-size:16px; font-weight:600;
+    font-family:inherit; cursor:pointer;
+  }
+  .primary:active{opacity:.85;}
+  .primary.big{padding:18px; font-size:17px;}
+  .secondary{
+    width:100%; padding:15px; border-radius:15px; border:1px solid var(--line);
+    background:var(--card); color:var(--text); font-size:16px; font-weight:600;
+    font-family:inherit; cursor:pointer;
+  }
+  .secondary:active{opacity:.75;}
+  .ghost{
+    width:100%; padding:14px; border:0; background:transparent; color:var(--muted);
+    font-size:15px; font-weight:500; font-family:inherit; cursor:pointer;
+  }
+  .ghost:active{opacity:.6;}
+  .hidden{display:none !important;}
+
+  /* ---------- Quiz ---------- */
+  .topbar{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+  .icon-btn{
+    width:38px; height:38px; border-radius:50%; border:1px solid var(--line);
+    background:var(--card); color:var(--muted); font-size:16px; line-height:1;
+    display:grid; place-items:center; cursor:pointer; font-family:inherit; padding:0;
+  }
+  .counter{font-size:15px; font-weight:600; color:var(--muted); font-variant-numeric:tabular-nums;}
+  .counter b{color:var(--text);}
+  .score{font-size:15px; font-weight:700; color:var(--ok); font-variant-numeric:tabular-nums;}
+  .progress{height:4px; background:var(--line); border-radius:2px; overflow:hidden;}
+  .progress > div{height:100%; width:0; background:var(--accent); border-radius:2px; transition:width .25s ease;}
+
+  .qwrap{
+    background:var(--card); border:1px solid var(--line); border-radius:20px;
+    padding:24px 18px; display:flex; flex-direction:column; gap:10px;
+    align-items:center; justify-content:center; text-align:center;
+    min-height:150px;
+  }
+  .qlabel{font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:700;}
+  .qterm{
+    font-size:clamp(19px, 5.6vw, 26px); line-height:1.3; font-weight:650;
+    letter-spacing:-.01em; overflow-wrap:break-word; word-break:break-word;
+  }
+
+  .answer-area{display:flex; flex-direction:column; gap:10px;}
+  .option{
+    width:100%; text-align:left; padding:16px; border-radius:15px;
+    border:1px solid var(--line); background:var(--card); color:var(--text);
+    font-size:16px; line-height:1.35; font-weight:500; font-family:inherit;
+    cursor:pointer; transition:background .15s, border-color .15s;
+    overflow-wrap:break-word;
+  }
+  .option:active{opacity:.75;}
+  .option.ok{background:var(--ok-bg); border-color:var(--ok); color:var(--ok); font-weight:600;}
+  .option.err{background:var(--err-bg); border-color:var(--err); color:var(--err);}
+  .option:disabled{opacity:1; cursor:default;}
+
+  .input{
+    width:100%; padding:16px; border-radius:15px; border:1px solid var(--line);
+    background:var(--card); color:var(--text); font-size:16px; font-family:inherit;
+  }
+  .input:focus{outline:none; border-color:var(--accent);}
+  .input.ok{border-color:var(--ok); background:var(--ok-bg); color:var(--ok); font-weight:600;}
+  .input.err{border-color:var(--err); background:var(--err-bg); color:var(--err);}
+
+  .banner{padding:13px 15px; border-radius:13px; font-size:15px; font-weight:600; line-height:1.4; overflow-wrap:break-word;}
+  .banner.ok{background:var(--ok-bg); color:var(--ok);}
+  .banner.err{background:var(--err-bg); color:var(--err);}
+
+  .footer{margin-top:auto; padding-top:6px;}
+
+  /* ---------- Result ---------- */
+  .result{display:flex; flex-direction:column; align-items:center; gap:4px; padding:26px 0 10px;}
+  .result-score{font-size:54px; font-weight:700; letter-spacing:-.03em; font-variant-numeric:tabular-nums;}
+  .result-sub{font-size:15px; color:var(--muted); font-weight:600;}
+  .result-actions{display:flex; flex-direction:column; gap:10px;}
+  .section-label{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-top:8px;}
+
+  /* ---------- List ---------- */
+  .list{display:flex; flex-direction:column;}
+  .row{padding:11px 2px; border-bottom:1px solid var(--line);}
+  .row:last-child{border-bottom:0;}
+  .row-ru{font-size:15px; font-weight:600; line-height:1.35; overflow-wrap:break-word;}
+  .row-en{font-size:14px; color:var(--muted); margin-top:3px; line-height:1.35; overflow-wrap:break-word;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ============ HOME ============ -->
+  <section class="screen active" id="screen-home">
+    <div class="home-head">
+      <h1>Термины</h1>
+      <p class="muted">Подготовка к зачёту · 180 терминов</p>
+    </div>
+
+    <div class="settings">
+      <div class="field">
+        <div class="field-label">Направление</div>
+        <div class="seg" data-key="direction">
+          <button type="button" data-val="ru-en" class="on">RU → EN</button>
+          <button type="button" data-val="en-ru">EN → RU</button>
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-label">Режим</div>
+        <div class="seg" data-key="mode">
+          <button type="button" data-val="choice" class="on">Выбор варианта</button>
+          <button type="button" data-val="type">Ввод ответа</button>
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-label">Часть</div>
+        <div class="seg" data-key="range">
+          <button type="button" data-val="all" class="on">Все 180</button>
+          <button type="button" data-val="a">1–60</button>
+          <button type="button" data-val="b">61–120</button>
+          <button type="button" data-val="c">121–180</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="spacer"></div>
+    <button class="primary big" id="btnStart">Начать</button>
+    <button class="ghost" id="btnList">Список всех терминов</button>
+  </section>
+
+  <!-- ============ QUIZ ============ -->
+  <section class="screen" id="screen-quiz">
+    <div class="topbar">
+      <button class="icon-btn" id="btnQuit" aria-label="Выйти">✕</button>
+      <div class="counter"><b id="qNum">1</b> / <span id="qTotal">1</span></div>
+      <div class="score"><span id="qScore">0</span> ✓</div>
+    </div>
+    <div class="progress"><div id="progFill"></div></div>
+
+    <div class="qwrap">
+      <div class="qlabel" id="qLabel">Переведите на английский</div>
+      <div class="qterm" id="qTerm">…</div>
+    </div>
+
+    <div id="answerArea" class="answer-area"></div>
+
+    <div class="footer">
+      <button class="primary hidden" id="btnNext">Далее</button>
+    </div>
+  </section>
+
+  <!-- ============ RESULT ============ -->
+  <section class="screen" id="screen-result">
+    <div class="topbar">
+      <div class="counter"><b>Результат</b></div>
+      <div></div>
+    </div>
+    <div class="result">
+      <div class="result-score" id="resScore">0 / 0</div>
+      <div class="result-sub" id="resPct">0%</div>
+    </div>
+    <div class="result-actions">
+      <button class="primary" id="btnRetryWrong">Повторить ошибки</button>
+      <button class="secondary" id="btnAgain">Пройти заново</button>
+      <button class="ghost" id="btnHome">На главную</button>
+    </div>
+    <div class="section-label hidden" id="wrongLabel">Ошибки</div>
+    <div id="wrongList" class="list"></div>
+  </section>
+
+  <!-- ============ LIST ============ -->
+  <section class="screen" id="screen-list">
+    <div class="topbar">
+      <button class="icon-btn" id="btnBackList" aria-label="Назад">←</button>
+      <div class="counter"><b>Все термины</b></div>
+      <div style="width:38px"></div>
+    </div>
+    <input class="input" id="searchInput" type="search" placeholder="Поиск по термину…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+    <div id="allList" class="list"></div>
+  </section>
+
+</div>
+
+<script>
+/* ================= ДАННЫЕ: [английский, русский] ================= */
+const DATA = [
+["access point","точка доступа"],
+["adware","рекламное ПО"],
+["analog signal","аналоговый сигнал"],
+["application/app","приложение"],
+["ALU (Arithmetic Logic Unit)","арифметико-логическое устройство"],
+["assembler","ассемблер"],
+["assembly languages","языки ассемблера"],
+["attenuation of a signal","затухание (ослабление) сигнала"],
+["backdoor","лазейка в системе безопасности"],
+["backup","резервное копирование"],
+["bandwidth","пропускная способность"],
+["BIOS (Basic Input/Output System)","базовая система ввода/вывода"],
+["battery pack","аккумуляторная батарея"],
+["binary code","двоичный код"],
+["broadband connection","широкополосное подключение"],
+["bus","шина"],
+["bus width","разрядность шины"],
+["bus topology","топология «общая шина»"],
+["calculations, computations","вычисления"],
+["cellular connection","сотовая связь"],
+["CPU (Central Processing Unit)","центральный процессор"],
+["circuit board","печатная плата"],
+["ciphertext","зашифрованный текст"],
+["client-server architecture","архитектура клиент-сервер"],
+["clock speed","тактовая частота"],
+["coaxial cable","коаксиальный кабель"],
+["compatible","совместимый"],
+["compiler","компилятор"],
+["control unit","блок управления"],
+["cooperative multitasking","кооперативная многозадачность"],
+["copper cable","медный кабель"],
+["crawler-based search engine","автоматизированная поисковая система"],
+["crawling","сканирование (поиск информации)"],
+["data transmission","передача данных"],
+["DDoS attack (Distributed Denial of Service)","распределённая атака на отказ в обслуживании"],
+["debugging","отладка"],
+["dedicated line","выделенная линия"],
+["default settings","настройки по умолчанию"],
+["delay/latency","задержка передачи сигнала"],
+["desktop PC","стационарный компьютер"],
+["detachable keyboard","съёмная клавиатура"],
+["dial-up connection","коммутируемое соединение"],
+["digital signal","цифровой сигнал"],
+["DSL (Digital Subscriber Line)","цифровая абонентская линия"],
+["distortion of a signal","искажение сигнала"],
+["download speed","скорость скачивания"],
+["encryption","шифрование"],
+["energy consumption","энергопотребление"],
+["erasable","перезаписываемый"],
+["executable file","исполняемый файл"],
+["expansion card","карта расширения"],
+["expansion slots","слоты расширения"],
+["feature","характеристика, особенность"],
+["fiber-optic cable","оптоволоконный кабель"],
+["firewall","межсетевой экран"],
+["firmware","прошивка"],
+["freeware","бесплатное ПО"],
+["front side bus","системная (фронтальная) шина"],
+["FTP (File Transfer Protocol)","протокол передачи файлов"],
+["geostationary satellite","геостационарный спутник"],
+["GUI (Graphical User Interface)","графический интерфейс пользователя"],
+["handheld, portable devices","портативные устройства"],
+["hardware","аппаратное обеспечение"],
+["headphones","наушники"],
+["heuristic scanning","эвристическое сканирование"],
+["high level language","высокоуровневый язык"],
+["high-speed Internet connection","высокоскоростное интернет-соединение"],
+["host-based firewall","межсетевой экран узла"],
+["hot spot","общая точка доступа"],
+["HTTP (Hyper Text Transfer Protocol)","протокол гипертекстовой передачи"],
+["human-powered directory","веб-каталог"],
+["hyperlink","гиперссылка"],
+["indexing","индексирование"],
+["input device","устройство ввода информации"],
+["IR (Instruction Register)","регистр инструкций"],
+["integrated circuit","интегральная схема"],
+["interpreter","интерпретатор"],
+["inheritance","наследование"],
+["jump command","команда перехода"],
+["kernel","ядро операционной системы"],
+["keylogger","клавиатурный шпион"],
+["laptop PC","ноутбук"],
+["LAN (Local Area Network)","локальная сеть"],
+["low-level language","низкоуровневый язык"],
+["mainframe","мейнфрейм"],
+["malware","вредоносное ПО"],
+["MAN (Metropolitan Area Network)","городская сеть"],
+["memory allocation","распределение памяти"],
+["memory capacity","объём памяти"],
+["memory card","карта памяти"],
+["mesh topology","ячеистая топология"],
+["Meta-Search engine","метапоисковая система"],
+["misdirection routine","процедура дезориентации"],
+["multi-core CPU","многоядерный процессор"],
+["multitasking","многозадачность"],
+["network backbone","сетевая магистраль"],
+["network bridge","сетевой мост"],
+["network gateway","сетевой шлюз"],
+["network hub","концентратор"],
+["network switch","коммутатор"],
+["network-based firewall","сетевой брандмауэр"],
+["node","узел сети"],
+["non-volatile","энергонезависимый"],
+["open-source software","программы с открытым исходным кодом"],
+["output device","устройство вывода информации"],
+["payload","полезная нагрузка"],
+["PC (Program Counter)","счётчик команд"],
+["peer-to-peer architecture","одноранговая сеть"],
+["performance","производительность"],
+["peripherals","подключаемое оборудование"],
+["phishing","фишинг"],
+["piggybacking","несанкционированное проникновение вслед за зарегистрированным пользователем"],
+["plaintext","открытый текст"],
+["power-supply unit","блок питания"],
+["preemptive multitasking","вытесняющая многозадачность"],
+["primary storage device","основное запоминающее устройство"],
+["proprietary software","закрытое программное обеспечение"],
+["RAM (Random Access Memory)","оперативное запоминающее устройство (ОЗУ)"],
+["ranking","ранжирование"],
+["ransomware","программы-вымогатели"],
+["raw data","необработанные данные"],
+["ROM (Read Only Memory)","постоянное запоминающее устройство (ПЗУ)"],
+["real-time OS","операционная система реального времени"],
+["remote access","удалённый доступ"],
+["reproduction routine","процедура самокопирования"],
+["request/query/search string","запрос"],
+["ring topology","кольцевая топология"],
+["robotics","робототехника"],
+["router","маршрутизатор"],
+["satellite connection","спутниковая связь"],
+["search engine","поисковая система"],
+["search index","база данных поисковика"],
+["search box/search bar","строка поиска"],
+["security measures","меры безопасности"],
+["semiconductor","полупроводник"],
+["sensitive data","конфиденциальные данные"],
+["shareware","условно бесплатное ПО"],
+["signature-based scanning","сигнатурное сканирование"],
+["silicon","кремний"],
+["smart home appliances","умные приборы"],
+["software","программное обеспечение"],
+["source code","исходный код"],
+["speakers","колонки"],
+["spyware","шпионские программы"],
+["star topology","топология «звезда»"],
+["storage device","устройство хранения данных"],
+["storage medium","носитель информации"],
+["streaming video","потоковое видео"],
+["subscribers","абоненты"],
+["supercomputer","суперкомпьютер"],
+["system clock","тактовый генератор"],
+["system unit","системный блок"],
+["tablet PC","планшет"],
+["timesharing operating systems","операционная система с разделением времени"],
+["to click a suspicious link","переходить по подозрительной ссылке"],
+["to deny access","отказать в доступе"],
+["to edit","редактировать"],
+["to encrypt data","шифровать данные"],
+["to erase/delete/remove","стирать данные"],
+["to prevent an unauthorized access","предотвратить несанкционированный доступ"],
+["to run an infected program","запускать заражённую программу"],
+["to spread/propagate viruses","распространять вирусы"],
+["to update antivirus software","обновлять антивирусное ПО"],
+["touch screen","сенсорный экран"],
+["touchpad","сенсорная панель"],
+["transceiver","приёмопередатчик"],
+["trigger","запуск (активация) вируса"],
+["twisted-pair cable","витая пара"],
+["UDP (User Datagram Protocol)","протокол пользовательских дейтаграмм"],
+["unauthorized access","несанкционированный доступ"],
+["upload speed","скорость отправки"],
+["URL (Uniform Resource Locator)","универсальный указатель ресурса"],
+["USB port","USB-порт"],
+["USB-flash drive/memory stick","флеш-накопитель"],
+["virtual keyboard","виртуальная клавиатура"],
+["volatile","энергозависимый"],
+["website defacement","искажение информации на веб-сайте"],
+["WLAN (Wireless Local Area Network)","беспроводная локальная сеть"],
+["word processor","текстовый редактор"],
+["worm","червь"]
+];
+
+const TERMS = DATA.map(function(p){ return {en: p[0], ru: p[1]}; });
+
+/* ================= СОСТОЯНИЕ ================= */
+const state = {
+  direction: 'ru-en',
+  mode: 'choice',
+  range: 'all',
+  queue: [],
+  pos: 0,
+  score: 0,
+  wrong: [],
+  answered: false,
+  token: 0
+};
+
+const $ = function(s){ return document.querySelector(s); };
+
+function show(id){
+  document.querySelectorAll('.screen').forEach(function(s){
+    s.classList.toggle('active', s.id === id);
+  });
+  window.scrollTo(0, 0);
+}
+
+function shuffle(a){
+  for(let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    const t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+/* ================= НАСТРОЙКИ НА ГЛАВНОЙ ================= */
+document.querySelectorAll('.seg').forEach(function(seg){
+  seg.addEventListener('click', function(e){
+    const b = e.target.closest('button');
+    if(!b) return;
+    seg.querySelectorAll('button').forEach(function(x){
+      x.classList.toggle('on', x === b);
+    });
+    state[seg.dataset.key] = b.dataset.val;
+  });
+});
+
+/* ================= СБОРКА ВОПРОСОВ ================= */
+const RANGES = { all:[0,180], a:[0,60], b:[60,120], c:[120,180] };
+
+function buildPool(){
+  const r = RANGES[state.range] || RANGES.all;
+  const idx = [];
+  for(let i = r[0]; i < r[1]; i++) idx.push(i);
+  return shuffle(idx);
+}
+
+function startQuiz(indices){
+  const pool = indices ? indices.slice() : buildPool();
+  state.queue = shuffle(pool);
+  state.pos = 0;
+  state.score = 0;
+  state.wrong = [];
+  state.answered = false;
+  state.token++;
+  show('screen-quiz');
+  nextQuestion();
+}
+
+function makeOptions(correct, idx){
+  const ru2en = state.direction === 'ru-en';
+  const set = new Set([correct]);
+  let guard = 0;
+  while(set.size < 4 && guard++ < 800){
+    const j = Math.floor(Math.random() * TERMS.length);
+    if(j === idx) continue;
+    set.add(ru2en ? TERMS[j].en : TERMS[j].ru);
+  }
+  return shuffle(Array.from(set));
+}
+
+/* ================= РЕНДЕР ВОПРОСА ================= */
+function nextQuestion(){
+  if(state.pos >= state.queue.length){ finish(); return; }
+
+  const token = ++state.token;
+  state.answered = false;
+
+  const idx = state.queue[state.pos];
+  const t = TERMS[idx];
+  const ru2en = state.direction === 'ru-en';
+  const question = ru2en ? t.ru : t.en;
+  const answer   = ru2en ? t.en : t.ru;
+
+  $('#qTerm').textContent = question;
+  $('#qLabel').textContent = ru2en ? 'Переведите на английский' : 'Переведите на русский';
+  $('#qNum').textContent = state.pos + 1;
+  $('#qTotal').textContent = state.queue.length;
+  $('#qScore').textContent = state.score;
+  $('#progFill').style.width = (state.pos / state.queue.length * 100) + '%';
+  $('#btnNext').classList.add('hidden');
+
+  const area = $('#answerArea');
+  area.innerHTML = '';
+
+  if(state.mode === 'choice'){
+    makeOptions(answer, idx).forEach(function(opt){
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'option';
+      b.textContent = opt;
+      b.addEventListener('click', function(){ pickOption(b, opt, answer, token); });
+      area.appendChild(b);
+    });
+  } else {
+    const input = document.createElement('input');
+    input.className = 'input';
+    input.type = 'text';
+    input.placeholder = ru2en ? 'Введите по-английски…' : 'Введите по-русски…';
+    input.autocomplete = 'off';
+    input.autocorrect = 'off';
+    input.autocapitalize = 'off';
+    input.spellcheck = false;
+    input.setAttribute('enterkeyhint', 'done');
+
+    const checkBtn = document.createElement('button');
+    checkBtn.type = 'button';
+    checkBtn.className = 'primary';
+    checkBtn.textContent = 'Проверить';
+
+    const skipBtn = document.createElement('button');
+    skipBtn.type = 'button';
+    skipBtn.className = 'ghost';
+    skipBtn.textContent = 'Не знаю — показать ответ';
+
+    checkBtn.addEventListener('click', function(){ checkTyped(input, checkBtn, skipBtn, answer, token); });
+    skipBtn.addEventListener('click', function(){ revealAnswer(answer, token, skipBtn); });
+    input.addEventListener('keydown', function(e){
+      if(e.key === 'Enter'){ e.preventDefault(); checkTyped(input, checkBtn, skipBtn, answer, token); }
+    });
+
+    area.appendChild(input);
+    area.appendChild(checkBtn);
+    area.appendChild(skipBtn);
+
+    try{ input.focus({preventScroll:true}); }catch(err){ input.focus(); }
+  }
+}
+
+/* ================= ОТВЕТЫ ================= */
+function registerAnswer(ok){
+  if(ok){ state.score++; }
+  else { state.wrong.push(state.queue[state.pos]); }
+  $('#qScore').textContent = state.score;
+}
+
+function pickOption(btn, chosen, correct, token){
+  if(state.answered || token !== state.token) return;
+  state.answered = true;
+  const ok = (chosen === correct);
+
+  Array.prototype.forEach.call($('#answerArea').children, function(b){
+    b.disabled = true;
+    if(b.textContent === correct) b.classList.add('ok');
+    else if(b === btn) b.classList.add('err');
+  });
+
+  registerAnswer(ok);
+
+  if(ok){
+    setTimeout(function(){ if(token === state.token) advance(); }, 620);
+  } else {
+    $('#btnNext').classList.remove('hidden');
+  }
+}
+
+function checkTyped(input, checkBtn, skipBtn, correct, token){
+  if(state.answered || token !== state.token) return;
+  if(!input.value.trim()){ input.focus(); return; }
+
+  state.answered = true;
+  const ok = isCorrect(input.value, correct);
+
+  input.disabled = true;
+  checkBtn.disabled = true;
+  skipBtn.classList.add('hidden');
+  input.classList.add(ok ? 'ok' : 'err');
+
+  registerAnswer(ok);
+
+  const banner = document.createElement('div');
+  banner.className = 'banner ' + (ok ? 'ok' : 'err');
+  banner.textContent = ok ? 'Верно' : 'Правильно: ' + correct;
+  $('#answerArea').appendChild(banner);
+
+  if(ok){
+    setTimeout(function(){ if(token === state.token) advance(); }, 700);
+  } else {
+    $('#btnNext').classList.remove('hidden');
+  }
+}
+
+function revealAnswer(correct, token, skipBtn){
+  if(state.answered || token !== state.token) return;
+  state.answered = true;
+
+  const area = $('#answerArea');
+  const input = area.querySelector('input');
+  const checkBtn = area.querySelector('.primary');
+  if(input){ input.disabled = true; input.classList.add('err'); }
+  if(checkBtn) checkBtn.disabled = true;
+  skipBtn.classList.add('hidden');
+
+  registerAnswer(false);
+
+  const banner = document.createElement('div');
+  banner.className = 'banner err';
+  banner.textContent = 'Правильно: ' + correct;
+  area.appendChild(banner);
+
+  $('#btnNext').classList.remove('hidden');
+}
+
+function advance(){
+  state.pos++;
+  if(state.pos >= state.queue.length){ finish(); return; }
+  nextQuestion();
+}
+
+/* ================= ПРОВЕРКА ВВОДА ================= */
+function norm(s){
+  return String(s).toLowerCase()
+    .replace(/ё/g, 'е')
+    .replace(/[«»""''`]/g, '')
+    .replace(/[.,;:!?()\[\]]/g, ' ')
+    .replace(/[–—\-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function variants(s){
+  const out = new Set();
+  const base = String(s).trim();
+  out.add(base);
+  base.split(/[\/,]/).forEach(function(p){ if(p.trim()) out.add(p.trim()); });
+  Array.from(out).forEach(function(v){
+    out.add(v.replace(/\([^)]*\)/g, ' ').trim());
+    out.add(v.replace(/^to\s+/i, ''));
+  });
+  return Array.from(out).filter(Boolean);
+}
+
+function isCorrect(input, answer){
+  const n = norm(input);
+  if(!n) return false;
+  return variants(answer).some(function(v){ return norm(v) === n; });
+}
+
+/* ================= ЗАВЕРШЕНИЕ ================= */
+function finish(){
+  const total = state.queue.length;
+  const correct = state.score;
+  const pct = total ? Math.round(correct / total * 100) : 0;
+
+  $('#resScore').textContent = correct + ' / ' + total;
+  $('#resPct').textContent = pct + '%';
+
+  const wl = $('#wrongList');
+  wl.innerHTML = '';
+
+  const retryBtn = $('#btnRetryWrong');
+  const wrongLabel = $('#wrongLabel');
+
+  if(state.wrong.length){
+    retryBtn.classList.remove('hidden');
+    retryBtn.textContent = 'Повторить ошибки (' + state.wrong.length + ')';
+    wrongLabel.classList.remove('hidden');
+
+    const frag = document.createDocumentFragment();
+    state.wrong.forEach(function(i){
+      const t = TERMS[i];
+      const row = document.createElement('div');
+      row.className = 'row';
+      const a = document.createElement('div');
+      a.className = 'row-ru';
+      a.textContent = t.ru;
+      const b = document.createElement('div');
+      b.className = 'row-en';
+      b.textContent = t.en;
+      row.appendChild(a);
+      row.appendChild(b);
+      frag.appendChild(row);
+    });
+    wl.appendChild(frag);
+  } else {
+    retryBtn.classList.add('hidden');
+    wrongLabel.classList.add('hidden');
+  }
+
+  show('screen-result');
+}
+
+/* ================= КНОПКИ ================= */
+$('#btnStart').addEventListener('click', function(){ startQuiz(null); });
+
+$('#btnNext').addEventListener('click', function(){
+  if(state.answered) advance();
+});
+
+$('#btnQuit').addEventListener('click', function(){
+  if(confirm('Прервать тренировку?')){
+    state.token++;
+    show('screen-home');
+  }
+});
+
+$('#btnAgain').addEventListener('click', function(){ startQuiz(null); });
+
+$('#btnRetryWrong').addEventListener('click', function(){
+  if(state.wrong.length) startQuiz(state.wrong);
+});
+
+$('#btnHome').addEventListener('click', function(){ show('screen-home'); });
+
+$('#btnList').addEventListener('click', function(){
+  $('#searchInput').value = '';
+  renderList('');
+  show('screen-list');
+});
+
+$('#btnBackList').addEventListener('click', function(){ show('screen-home'); });
+
+/* ================= СПИСОК ТЕРМИНОВ ================= */
+function renderList(filter){
+  const q = (filter || '').trim().toLowerCase();
+  const list = $('#allList');
+  const frag = document.createDocumentFragment();
+
+  TERMS.forEach(function(t){
+    if(q && t.ru.toLowerCase().indexOf(q) === -1 && t.en.toLowerCase().indexOf(q) === -1) return;
+    const row = document.createElement('div');
+    row.className = 'row';
+    const a = document.createElement('div');
+    a.className = 'row-ru';
+    a.textContent = t.ru;
+    const b = document.createElement('div');
+    b.className = 'row-en';
+    b.textContent = t.en;
+    row.appendChild(a);
+    row.appendChild(b);
+    frag.appendChild(row);
+  });
+
+  list.innerHTML = '';
+  list.appendChild(frag);
+}
+
+$('#searchInput').addEventListener('input', function(e){
+  renderList(e.target.value);
+});
+</script>
+</body>
+</html>
